@@ -1,16 +1,4 @@
-# time-tracker
-
-Private repository. "Rhythmus" is an iPhone time-tracking PWA: plain HTML/CSS/ES modules in `app/`, no build step, no dependencies, deployed to GitHub Pages by `.github/workflows/pages.yml`. See `README.md` for the module map.
-
-- `npm test` runs the unit tests (`node --test`). Keep domain logic pure and covered there.
-- State changes go through the reducer in `app/js/domain.js`. The export format in `app/js/storage.js` is a public contract: bump `SCHEMA_VERSION` and migrate in `parseState` when it changes.
-- A new file under `app/` must be added to `SHELL` in `app/sw.js`; a test enforces it.
-
-## Conventions
-
-- Clean, maintainable, well-structured code comes first.
-- Primary language is C#. C++ and VB.NET may appear.
-- Follow `.editorconfig` for formatting and naming.
+@AGENTS.md
 
 ## pstack
 

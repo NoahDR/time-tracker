@@ -1,37 +1,8 @@
-# Normalize line endings in the repository; check out with the platform's native endings.
-* text=auto
+* text=auto eol=lf
 
-# Windows-only files keep CRLF.
-*.sln       text eol=crlf
-*.slnx      text eol=crlf
-*.bat       text eol=crlf
-*.cmd       text eol=crlf
-*.ps1       text eol=crlf
-*.vcxproj   text eol=crlf
-*.vcxproj.filters text eol=crlf
+*.png binary
+*.ico binary
 
-# Shell scripts must stay LF to run on Linux/macOS.
-*.sh        text eol=lf
-.claude/skills/poteto-mode/scripts/watch-pr/watch-pr text eol=lf
+package-lock.json linguist-generated -diff
 
-# Binary files.
-*.png  binary
-*.jpg  binary
-*.jpeg binary
-*.gif  binary
-*.ico  binary
-*.webp binary
-*.pdf  binary
-*.dll  binary
-*.exe  binary
-*.snk  binary
-
-# Collapse generated lockfiles in diffs.
-*.lock               linguist-generated -diff
-packages.lock.json   linguist-generated -diff
-
-# Vendored third-party content stays out of language statistics.
-.claude/skills/**  linguist-vendored
-.claude/agents/**  linguist-vendored
-.claude/docs/**    linguist-vendored
-.claude/pstack/**  linguist-vendored
+.claude/** linguist-vendored
