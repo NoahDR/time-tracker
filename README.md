@@ -14,15 +14,10 @@ Rhythmus ist eine Zeiterfassung fürs iPhone. Du tippst auf einen Lebensbereich,
 
 ## Funktionen
 
-- **Heute.** Zeigt den laufenden Timer mit Stopp-Taste und die Kacheln mit der heutigen Summe pro Bereich. Darunter folgen ein 24-Stunden-Verlauf und alle Einträge, die du bearbeiten, löschen oder nachtragen kannst.
-- **Auswertung.** Für Woche, Monat und Jahr. Sie zeigt die erfasste Zeit, den Schnitt pro Tag, die nicht erfasste Zeit, die Anteile je Gruppe und einen Balken je Bereich.
-- **Einstellungen.** Hier legst du Bereiche an, benennst sie um, färbst sie ein und archivierst sie. Export und Import sind auch hier.
-
-Die Startbereiche sind in vier Gruppen sortiert:
-- Basis: Schlafen, Arbeit, Essen
-- Privates: Orga, Familytime, Me Time
-- Gemeinde: Leitung, Jugend
-- Rule of Life: Gebet, Bibel, Stille, Sabbat, Gemeinschaft
+- **Eigene Struktur.** Beim ersten Start legst du Gruppen an (zum Beispiel Allgemein, Privat, Arbeit) und darin die Bereiche, die du tracken willst. Nichts ist vorgegeben.
+- **Heute.** Ein großer Live-Timer, darunter die Bereiche als Pillen, nach Gruppen sortiert. Ein Tipp startet die Zeit, ein Tipp auf die laufende Pille stoppt sie, ein Tipp auf eine andere wechselt. Darunter folgen der Tagesverlauf und alle Einträge, die du bearbeiten oder nachtragen kannst.
+- **Übersicht.** Für Tag, Woche, Monat und Jahr. Ein Ring zeigt die Gruppenanteile, ein Säulendiagramm den Verlauf, dazu Schnitt pro Tag, nicht erfasste Zeit und Balken je Bereich.
+- **Einstellungen.** Hier legst du Gruppen und Bereiche an, benennst sie um, färbst sie ein, sortierst und archivierst sie. Dazu kommen Export, Import und ein Reset, der nur durch Gedrückthalten auslöst.
 
 ## Datenschutz
 

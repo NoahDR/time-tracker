@@ -8,7 +8,7 @@ let browser;
 
 before(async () => {
   server = await serve();
-  browser = await chromium.launch();
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 });
 
 after(async () => {
@@ -26,44 +26,74 @@ async function openApp() {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await page.goto(server.url);
-  await page.waitForSelector('.tile');
   return { context, page, errors };
 }
 
-test('tracking a day: start, switch, reload, stop, backfill, analyze, export', async () => {
+const addViaQuickAdd = async (page, placeholder, name) => {
+  const input = page.getByPlaceholder(placeholder);
+  await input.fill(name);
+  await input.press('Enter');
+};
+
+async function buildStructure(page) {
+  await page.getByRole('button', { name: 'Privat' }).click();
+  await addViaQuickAdd(page, 'Weitere Gruppe …', 'Arbeit');
+  await addViaQuickAdd(page, 'Bereich in Privat …', 'Familie');
+  await addViaQuickAdd(page, 'Bereich in Privat …', 'Schlafen');
+  await addViaQuickAdd(page, 'Bereich in Arbeit …', 'Projekt');
+  await page.getByRole('button', { name: 'Los geht’s' }).click();
+}
+
+test('first run: build groups and areas, track a day, analyze, export', async () => {
   const { context, page, errors } = await openApp();
 
-  assert.equal(await page.locator('.tile').count(), 13, 'default categories render');
+  assert.equal(await page.locator('.pill').count(), 0, 'no predefined areas');
+  const start = page.getByRole('button', { name: /Lege mindestens einen Bereich an/ });
+  assert.ok(await start.isDisabled(), 'cannot finish setup without an area');
 
-  await page.getByRole('button', { name: /Arbeit/ }).click();
-  const first = await page.textContent('.now-clock');
-  await page.waitForFunction((text) => document.querySelector('.now-clock').textContent !== text, first, { timeout: 3000 });
+  await buildStructure(page);
+  assert.deepEqual(await page.locator('.group-head h2').allTextContents(), ['Privat', 'Arbeit']);
+  assert.equal(await page.locator('.pill').count(), 3, 'one pill per area');
 
-  await page.getByRole('button', { name: /Gebet/ }).click();
-  assert.match(await page.textContent('.now-label'), /Gebet/, 'switches to the tapped area');
-  assert.equal(await page.locator('.log li').count(), 2, 'both entries are logged');
+  await page.locator('.pill', { hasText: 'Projekt' }).click();
+  const first = await page.textContent('.hero-clock');
+  await page.waitForFunction((text) => document.querySelector('.hero-clock').textContent !== text, first, { timeout: 3000 });
+
+  await page.locator('.pill', { hasText: 'Familie' }).click();
+  assert.match(await page.textContent('.hero-title'), /Familie/, 'switches to the tapped area');
+  assert.equal(await page.locator('.entries li').count(), 2, 'both entries are logged');
 
   await page.reload();
-  await page.waitForSelector('.now-clock');
-  assert.match(await page.textContent('.now-label'), /Gebet/, 'running entry survives a reload');
+  await page.waitForSelector('.hero.live');
+  assert.match(await page.textContent('.hero-title'), /Familie/, 'running entry survives a reload');
 
-  await page.getByRole('button', { name: 'Stoppen' }).click();
-  assert.equal(await page.locator('.now.idle').count(), 1, 'stop ends tracking');
+  await page.locator('.pill.running').click();
+  assert.equal(await page.locator('.hero.live').count(), 0, 'tapping the running pill stops it');
 
-  await page.getByText('+ Eintrag nachtragen').click();
-  await page.locator('dialog select').selectOption('sleep');
+  await page.getByRole('button', { name: 'Eintrag nachtragen' }).click();
+  await page.locator('dialog select').selectOption({ label: 'Schlafen' });
   await page.getByRole('button', { name: 'Sichern' }).click();
-  assert.equal(await page.locator('dialog').count(), 0, 'sheet closes after saving');
-  assert.equal(await page.locator('.log li').count(), 3, 'backfilled entry is logged');
+  await page.waitForSelector('dialog', { state: 'detached' });
+  assert.equal(await page.locator('.entries li').count(), 3, 'backfilled entry is logged');
 
-  await page.getByRole('button', { name: /Auswertung/ }).click();
-  await page.getByRole('button', { name: 'Jahr' }).click();
-  assert.match(await page.textContent('.day-nav h2'), /^\d{4}$/, 'year range is shown');
+  await page.getByRole('button', { name: 'Übersicht' }).click();
+  await page.getByRole('tab', { name: 'Tag' }).click();
+  assert.equal(await page.locator('.column').count(), 24, 'day chart has hourly columns');
+  assert.equal(await page.locator('.legend li').count(), 2, 'legend lists both groups');
+  await page.getByRole('tab', { name: 'Jahr' }).click();
+  assert.equal(await page.locator('.column').count(), 12, 'year chart has monthly columns');
 
-  await page.getByRole('button', { name: /Einstellungen/ }).click();
+  await page.getByRole('button', { name: 'Einstellungen' }).click();
+  await page.locator('.struct-area', { hasText: 'Projekt' }).click();
+  await page.getByLabel('Name').fill('Kundenprojekt');
+  await page.getByRole('button', { name: 'Sichern' }).click();
+  await page.waitForSelector('dialog', { state: 'detached' });
+  assert.equal(await page.locator('.struct-area', { hasText: 'Kundenprojekt' }).count(), 1, 'area renamed');
+
   await page.getByRole('button', { name: 'Kopieren' }).click();
   const exported = JSON.parse(await page.evaluate(() => navigator.clipboard.readText()));
-  assert.equal(exported.format, 'time-tracker-export');
+  assert.equal(exported.version, 2);
+  assert.deepEqual(exported.groups.map((g) => g.name), ['Privat', 'Arbeit']);
   assert.equal(exported.entries.length, 3, 'export contains every entry');
 
   assert.deepEqual(errors, [], 'no console errors or CSP violations');
@@ -76,8 +106,7 @@ test('the installed app starts offline', async () => {
   await page.reload();
   await context.setOffline(true);
   await page.reload();
-  await page.waitForSelector('.tile');
-  assert.equal(await page.locator('.tile').count(), 13, 'app shell loads from the cache');
+  await page.waitForSelector('.welcome');
   assert.deepEqual(errors, []);
   await context.close();
 });

@@ -1,23 +1,28 @@
-const CACHE = 'rhythmus-v1';
+const CACHE = 'rhythmus-v2';
 
 const SHELL = [
   './',
   'index.html',
-  'styles.css',
   'manifest.webmanifest',
-  'icons/icon.svg',
+  'styles.css',
   'icons/apple-touch-icon.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'js/main.js',
-  'js/domain.js',
+  'icons/icon.svg',
   'js/dom.js',
+  'js/domain.js',
+  'js/main.js',
   'js/stats.js',
   'js/storage.js',
   'js/time.js',
+  'js/ui/charts.js',
+  'js/ui/controls.js',
+  'js/ui/icons.js',
+  'js/ui/onboarding.js',
+  'js/ui/overview.js',
   'js/ui/settings.js',
   'js/ui/sheets.js',
-  'js/ui/stats.js',
+  'js/ui/structure.js',
   'js/ui/today.js',
 ];
 

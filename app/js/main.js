@@ -1,22 +1,25 @@
 import { reduce } from './domain.js';
-import { h } from './dom.js';
+import { h, patch } from './dom.js';
 import { load, save } from './storage.js';
-import { rangeOf, formatClock } from './time.js';
+import { formatClock, rangeOf } from './time.js';
+import { icon } from './ui/icons.js';
+import { onboardingView } from './ui/onboarding.js';
+import { overviewView } from './ui/overview.js';
 import { settingsView } from './ui/settings.js';
-import { statsView } from './ui/stats.js';
 import { todayView } from './ui/today.js';
 
 const VIEWS = {
-  today: { label: 'Heute', icon: '◷', render: todayView },
-  stats: { label: 'Auswertung', icon: '▤', render: statsView },
-  settings: { label: 'Einstellungen', icon: '⚙', render: settingsView },
+  today: { label: 'Heute', icon: 'today', render: todayView },
+  overview: { label: 'Übersicht', icon: 'chart', render: overviewView },
+  settings: { label: 'Einstellungen', icon: 'settings', render: settingsView },
 };
 
 const root = document.getElementById('app');
+const initial = load();
 
 const store = {
-  state: load(),
-  ui: { view: 'today', day: Date.now(), range: rangeOf('week', Date.now()) },
+  state: initial,
+  ui: { view: 'today', setup: initial.areas.length === 0, day: Date.now(), range: rangeOf('week', Date.now()) },
 
   dispatch(action) {
     this.state = reduce(this.state, action);
@@ -24,27 +27,35 @@ const store = {
     render();
   },
 
-  setUi(patch) {
-    this.ui = { ...this.ui, ...patch };
+  setUi(patchUi) {
+    this.ui = { ...this.ui, ...patchUi };
     render();
-    if ('view' in patch) scrollTo(0, 0);
+    if ('view' in patchUi) scrollTo({ top: 0 });
   },
 
   toast(message) {
     const el = h('div', { className: 'toast', role: 'status' }, message);
     document.body.append(el);
+    setTimeout(() => el.classList.add('leaving'), 2600);
     setTimeout(() => el.remove(), 3000);
   },
 };
 
 function render() {
   const now = Date.now();
-  root.replaceChildren(
-    h('main', null, VIEWS[store.ui.view].render(store, now)),
-    h('nav', { className: 'tabbar' }, Object.entries(VIEWS).map(([key, view]) =>
-      h('button', { className: key === store.ui.view ? 'active' : '', onClick: () => store.setUi({ view: key }) },
-        h('span', { className: 'tab-icon' }, view.icon), h('span', null, view.label)))),
-  );
+  const key = store.ui.setup ? 'setup' : store.ui.view;
+  const view = store.ui.setup ? onboardingView(store) : VIEWS[store.ui.view].render(store, now);
+  patch(root,
+    h('main', { className: `view view-${key}`, 'data-key': key }, view),
+    !store.ui.setup && h('nav', { className: 'tabbar', 'data-key': 'tabbar' },
+      h('span', {
+        className: 'tabbar-indicator',
+        style: { transform: `translateX(${Object.keys(VIEWS).indexOf(store.ui.view) * 100}%)` },
+      }),
+      Object.entries(VIEWS).map(([name, v]) => h('button', {
+        className: name === store.ui.view ? 'active' : '', 'aria-current': name === store.ui.view ? 'page' : null,
+        onClick: () => store.setUi({ view: name }),
+      }, icon(v.icon, 22), h('span', null, v.label)))));
 }
 
 function tick() {
@@ -54,8 +65,9 @@ function tick() {
 
 render();
 setInterval(tick, 1000);
-setInterval(render, 60_000);
+setInterval(render, 30_000);
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && render());
+document.addEventListener('touchstart', () => {}, { passive: true });
 
 navigator.storage?.persist?.();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
