@@ -20,12 +20,12 @@ Run both test commands before you open a PR. CI runs them too.
 
 | Path | Owns |
 | --- | --- |
-| `app/js/domain.js` | State shape, default categories, and the reducer. Every state change is an action through `reduce`. |
+| `app/js/domain.js` | State shape (`groups`, `areas`, `entries`), the color palette, and the reducer. Every state change is an action through `reduce`. A fresh install starts empty; the user builds the structure in onboarding. |
 | `app/js/time.js` | Day, week (Monday start), month and year ranges, and all formatting. |
-| `app/js/stats.js` | Clipping entries to a range and summing them. Pure functions. |
+| `app/js/stats.js` | Clipping entries to a range, summing by area and group, and chart buckets. Pure functions. |
 | `app/js/storage.js` | `localStorage` persistence and the export/import format, validated in `parseState`. |
-| `app/js/ui/` | One module per view (`today`, `stats`, `settings`) plus the edit sheets. |
-| `app/js/dom.js` | The `h()` element helper. Text goes in as text nodes, never as HTML. |
+| `app/js/ui/` | One module per view (`onboarding`, `today`, `overview`, `settings`), the shared `structure` editor, `sheets`, `charts`, `controls` and `icons`. |
+| `app/js/dom.js` | `h()`/`s()` element helpers and `patch()`, which morphs the live DOM so elements survive re-renders and CSS transitions run. Give list items a `data-key`. Text goes in as text nodes, never as HTML. |
 | `app/sw.js` | Network-first service worker with an offline cache of the app shell. |
 | `docs/` | Export format and the year-end analysis prompt. |
 
@@ -43,6 +43,7 @@ Run both test commands before you open a PR. CI runs them too.
 - Clean, small modules organized by domain, not by phase. Prefer a lookup table or reducer action over a new branch in a conditional.
 - Two-space indent, single quotes, semicolons, trailing commas in multiline literals. `.editorconfig` holds the whitespace rules.
 - Comments only for a non-obvious *why*.
+- Motion follows Emil Kowalski's rules: animate only `transform` and `opacity`, use the `--ease-*` tokens in `styles.css`, keep UI motion under 300 ms, and ship a `prefers-reduced-motion` variant. Inline styles must go through CSSOM (`style.setProperty`, `style.cssText`), never `setAttribute('style')`, or the CSP blocks them.
 - Tests assert behavior a user can observe, not internals.
 
 ## Workflow
